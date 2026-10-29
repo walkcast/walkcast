@@ -1,17 +1,14 @@
 #!/usr/bin/env node
 // Generate each tour's narration: one clip per say line, with the time of every word.
 // Usage: node voice.mjs [<tutorial-id> ...] [--config tutorials/config.yaml]
-//        node voice.mjs --samples [--voices narrator,US_Emma,af_heart] [--text "..."]
-//        node voice.mjs --samples --describe "A calm, friendly man..." [--takes 3]
-//        node voice.mjs --keep <take>
+//        node voice.mjs --samples [--voices af_heart,US_Emma] [--text "..."]
 //
-// Two engines. Ming-3.0 (MIT, through MLX) is the default on Apple Silicon: natural and expressive, with
-// built-in voices, a default narrator, and narrators described in words. Kokoro (Apache-2.0) is the default
-// everywhere else, and smaller and faster. config.yaml's voice.engine picks one explicitly.
+// Two engines. Kokoro (Apache-2.0) is the default: small, fast, and the same voice on every line, which is
+// what the user picked twice in blind listening tests. Ming-3.0 (MIT, through MLX, Apple Silicon only) is
+// an option with five built-in voices, and it can copy a recording of a real voice (voice.reference).
 //
 // --samples reads one line (the first narration line in the plan) in several voices and writes
-// tutorials/.cache/voice/samples.html to compare them. With --describe it makes takes of a new narrator
-// instead, and --keep <take> saves one to tutorials/assets/voice/ and sets it in config.yaml.
+// tutorials/.cache/voice/samples.html to compare them.
 //
 // Clips are cached in tutorials/.cache/voice/ by a hash of the engine, voice, speed and text, so a line
 // is only generated again when it changes. Writes tutorials/<id>/produce/voice.json for each tour.
@@ -22,11 +19,9 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
-import YAML from 'yaml';
 import { dataDir, done, fail, loadConfig, parseArgs, readYaml, tourIds, writeJson } from './lib/common.mjs';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
-const NARRATOR = { audio: path.join(here, '..', 'assets', 'voice', 'narrator.wav'), text: path.join(here, '..', 'assets', 'voice', 'narrator.txt') };
 
 // Each engine runs in its own Python environment. Packages resolve as they were on `snapshot`, so an
 // install today and one next year get the same versions. An engine prints word timings, or [] if it can't.
@@ -37,9 +32,9 @@ const ENGINES = {
     packages: ['mlx-audio==0.6.1', 'soundfile==0.13.1'],
     script: 'voice/ming_tts.py',
     version: 1, // bump when the script's output changes, so cached clips are made again
-    voice: 'narrator',
-    // narrator is the plugin's own: a voice Ming made from a description, kept as a reference clip.
-    voices: ['narrator', 'US_Emma', 'US_James', 'US_Stella', 'UK_George', 'UK_Charlotte'],
+    voice: 'US_Emma',
+    // Built-in voices. A voice Ming makes from a description drifts in pitch from line to line, so there are none of those.
+    voices: ['US_Emma', 'UK_George', 'UK_Charlotte', 'US_James', 'US_Stella'],
     model: 'mlx-community/Ming-3.0-tts-0.5B-bf16',
     aligner: 'mlx-community/Qwen3-ForcedAligner-0.6B-8bit',
     only: 'darwin-arm64', // MLX runs on Apple Silicon only
@@ -68,14 +63,12 @@ const KOKORO_SAMPLES = {
 };
 KOKORO_SAMPLES.b = KOKORO_SAMPLES.a;
 const ACCENTS = { a: 'American English', b: 'British English', e: 'Spanish', f: 'French', h: 'Hindi', i: 'Italian', j: 'Japanese', p: 'Brazilian Portuguese', z: 'Mandarin' };
-// Read by each take of a described narrator; long enough to copy the voice from.
-const TAKE_LINE = "Hi! I'll walk you through this step by step. It only takes a minute, and by the end you'll know exactly where everything is.";
 
 const args = parseArgs();
-const { cfg, cfgFile, tutorials } = loadConfig(args.config);
+const { cfg, tutorials } = loadConfig(args.config);
 const platform = `${process.platform}-${process.arch}`;
 const usable = (name) => !ENGINES[name].only || ENGINES[name].only === platform;
-const engineName = cfg.voice?.engine || (usable('ming') ? 'ming' : 'kokoro');
+const engineName = cfg.voice?.engine || 'kokoro';
 if (!ENGINES[engineName]) fail(`Unknown voice engine "${engineName}" in config.yaml. Available: ${Object.keys(ENGINES).join(', ')}`);
 if (!usable(engineName)) fail(`The ${engineName} voice engine runs only on Apple Silicon Macs. Set voice.engine to kokoro in config.yaml.`);
 const speed = Number(cfg.voice?.speed || 1);
@@ -83,7 +76,6 @@ const lang = String(cfg.voice?.lang || 'en').toLowerCase().slice(0, 2);
 const cacheDir = path.join(tutorials, '.cache', 'voice');
 const clip = (key, ext) => path.join(cacheDir, `${key}.${ext}`);
 
-if (args.keep !== undefined) keep(Number(args.keep));
 if (args.samples) samples();
 const current = speaker(engineName, cfg.voice || {});
 const ids = tourIds(tutorials, args._, { videos: true });
@@ -137,9 +129,6 @@ function speaker(engine, v) {
     return { engine, label: v.reference, id: `ref:${hash(fs.readFileSync(audio))}:${v.reference_text}`, reference: { audio, text: v.reference_text } };
   }
   const voice = v.voice || ENGINES.ming.voice;
-  if (voice === 'narrator') {
-    return { engine, label: 'narrator', id: `narrator:${hash(fs.readFileSync(NARRATOR.audio))}`, reference: { audio: NARRATOR.audio, text: fs.readFileSync(NARRATOR.text, 'utf8').trim() } };
-  }
   if (!ENGINES.ming.voices.includes(voice)) fail(`Ming has no voice "${voice}". Its English voices: ${ENGINES.ming.voices.join(', ')}.`);
   return { engine, label: voice, id: voice, voice };
 }
@@ -148,7 +137,7 @@ function keyFor(who, text) {
   // Kokoro's key is unchanged from before Ming arrived, so existing clips stay cached.
   const parts = who.engine === 'kokoro'
     ? ['kokoro', ENGINES.kokoro.version, who.id, speed, text]
-    : [who.engine, ENGINES[who.engine].version, who.id, who.seed ?? null, speed, lang, text];
+    : [who.engine, ENGINES[who.engine].version, who.id, null, speed, lang, text];
   return hash(JSON.stringify(parts)).slice(0, 20);
 }
 
@@ -162,7 +151,7 @@ function generate(engine, todo) {
   fs.mkdirSync(cacheDir, { recursive: true });
   const python = ensureEngine(engine);
   const spec = ENGINES[engine];
-  const lines = [...todo].map(([key, l]) => ({ key, text: l.text, out: clip(key, 'wav'), voice: l.voice, reference: l.reference, describe: l.describe, seed: l.seed }));
+  const lines = [...todo].map(([key, l]) => ({ key, text: l.text, out: clip(key, 'wav'), voice: l.voice, reference: l.reference }));
   const job = { voice: spec.voice, speed, lang, model: spec.model, aligner: spec.aligner, lines };
   console.error(`Generating ${todo.size} narration clip${todo.size > 1 ? 's' : ''} with ${engine}...`);
   const run = spawnSync(python, [path.join(here, spec.script)], {
@@ -181,31 +170,23 @@ function generate(engine, todo) {
   if (run.error || run.status !== 0) fail(`The ${engine} voice engine failed.`, { output: tail(run.stderr || String(run.error)) });
 }
 
-// One line in several voices, or several takes of a described narrator, on a page to compare them.
+// One line in several voices, on a page to compare them.
 function samples() {
-  const text = String(args.text || (args.describe ? TAKE_LINE : sampleLine())).trim();
-  let list;
-  if (args.describe) {
-    if (!usable('ming')) fail('Describing a narrator needs the Ming engine, which runs only on Apple Silicon Macs.');
-    const takes = Math.max(1, Math.min(6, Number(args.takes || 3)));
-    list = Array.from({ length: takes }, (_, k) => ({ engine: 'ming', label: `take ${k + 1}`, id: `describe:${args.describe}`, describe: String(args.describe), seed: k + 1 }));
-  } else {
-    const names = args.voices
-      ? String(args.voices).split(',').map((v) => v.trim()).filter(Boolean)
-      : usable('ming') ? [...ENGINES.ming.voices, 'af_heart', 'bm_george'] : KOKORO_SAMPLES[(cfg.voice?.voice || 'a')[0]] || KOKORO_SAMPLES.a;
-    // Kokoro voices look like af_heart: a language letter, f or m, and a name.
-    list = names.map((n) => speaker(/^[a-z][fm]_/.test(n) ? 'kokoro' : 'ming', { voice: n }));
-  }
+  const text = String(args.text || sampleLine()).trim();
+  const names = args.voices
+    ? String(args.voices).split(',').map((v) => v.trim()).filter(Boolean)
+    : [...(KOKORO_SAMPLES[(cfg.voice?.engine !== 'ming' && cfg.voice?.voice) ? cfg.voice.voice[0] : 'a'] || KOKORO_SAMPLES.a), ...(usable('ming') ? ENGINES.ming.voices.slice(0, 3) : [])];
+  // Kokoro voices look like af_heart: a language letter, f or m, and a name.
+  const list = names.map((n) => speaker(/^[a-z][fm]_/.test(n) ? 'kokoro' : 'ming', { voice: n }));
   const lines = list.map((who) => ({ ...who, text, key: keyFor(who, text) }));
-  for (const engine of ['ming', 'kokoro']) {
+  for (const engine of ['kokoro', 'ming']) {
     generate(engine, new Map(lines.filter((l) => l.engine === engine && !fs.existsSync(clip(l.key, 'json'))).map((l) => [l.key, l])));
   }
-  if (args.describe) writeJson(path.join(cacheDir, 'takes.json'), { describe: args.describe, text, takes: lines.map((l) => ({ take: Number(l.label.split(' ')[1]), clip: clip(l.key, 'wav') })) });
   const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
-  const describeVoice = (l) => l.describe ? 'A new narrator from your description'
-    : l.engine === 'kokoro' ? `Kokoro: ${ACCENTS[l.voice[0]] || l.voice[0]}, ${l.voice[1] === 'm' ? 'man' : 'woman'}`
-    : l.label === 'narrator' ? "Ming: the plugin's narrator, warm and conversational" : `Ming: built-in voice, ${l.label.startsWith('UK') ? 'British' : 'American'}`;
-  const isCurrent = (l) => !args.describe && l.engine === engineName && l.label === (cfg.voice?.reference || cfg.voice?.voice || ENGINES[engineName].voice);
+  const describeVoice = (l) => l.engine === 'kokoro'
+    ? `Kokoro: ${ACCENTS[l.voice[0]] || l.voice[0]}, ${l.voice[1] === 'm' ? 'man' : 'woman'}`
+    : `Ming: ${l.label.startsWith('UK') ? 'British' : 'American'}, Apple Silicon only`;
+  const isCurrent = (l) => l.engine === engineName && l.label === (cfg.voice?.reference || cfg.voice?.voice || ENGINES[engineName].voice);
   const page = path.join(cacheDir, 'samples.html');
   fs.writeFileSync(page, `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
@@ -219,8 +200,8 @@ section{display:grid;grid-template-columns:1fr minmax(0,320px);gap:6px 16px;alig
 h2{font-size:17px;margin:0}.meta{color:var(--muted);font-size:14px;margin:0}audio{width:100%}
 @media (max-width:600px){section{grid-template-columns:1fr}}
 </style></head><body><main>
-<h1>${args.describe ? 'Narrator takes' : 'Narrator voices'}</h1>
-<p class="lede">${args.describe ? `Each take is a new voice from “${esc(args.describe)}”, reading: “${esc(text)}” Tell Claude which take to keep.` : `Each reads: “${esc(text)}” Tell Claude which you'd like.`}</p>
+<h1>Narrator voices</h1>
+<p class="lede">Each reads: “${esc(text)}” Tell Claude which you'd like.</p>
 ${lines.map((l) => `<section><div><h2>${esc(l.label)}${isCurrent(l) ? ' (current)' : ''}</h2><p class="meta">${esc(describeVoice(l))}</p></div><audio controls preload="metadata" src="${path.basename(clip(l.key, 'wav'))}"></audio></section>`).join('\n')}
 </main></body></html>
 `);
@@ -230,24 +211,7 @@ ${lines.map((l) => `<section><div><h2>${esc(l.label)}${isCurrent(l) ? ' (current
     text,
     current: { engine: engineName, voice: cfg.voice?.reference || cfg.voice?.voice || ENGINES[engineName].voice },
     voices: lines.map((l) => ({ engine: l.engine, voice: l.label, about: describeVoice(l), clip: path.relative(process.cwd(), clip(l.key, 'wav')) })),
-    ...(args.describe ? { next: 'voice.mjs --keep <take> saves the take the user picks as the narrator.' } : {}),
   });
-}
-
-// Save a take of a described narrator as this project's narrator, and set it in config.yaml.
-function keep(take) {
-  const file = path.join(cacheDir, 'takes.json');
-  if (!fs.existsSync(file)) fail('No takes yet. Run voice.mjs --samples --describe "..." first.');
-  const takes = JSON.parse(fs.readFileSync(file, 'utf8'));
-  const chosen = takes.takes.find((t) => t.take === take);
-  if (!chosen || !fs.existsSync(chosen.clip)) fail(`No take ${take}. Takes: ${takes.takes.map((t) => t.take).join(', ')}`);
-  const dest = path.join(tutorials, 'assets', 'voice', 'narrator.wav');
-  fs.mkdirSync(path.dirname(dest), { recursive: true });
-  fs.copyFileSync(chosen.clip, dest);
-  const doc = YAML.parseDocument(fs.readFileSync(cfgFile, 'utf8'));
-  doc.set('voice', doc.createNode({ engine: 'ming', reference: 'assets/voice/narrator.wav', reference_text: takes.text, describe: takes.describe, ...(cfg.voice?.speed ? { speed: cfg.voice.speed } : {}), ...(cfg.voice?.lang ? { lang: cfg.voice.lang } : {}) }));
-  fs.writeFileSync(cfgFile, doc.toString());
-  done({ ok: true, narrator: path.relative(process.cwd(), dest), note: 'Every line is narrated again with this voice on the next run, and the videos need recording again.' });
 }
 
 // The first narration line in the plan, so the samples sound like the real thing.

@@ -6,8 +6,9 @@ voice.mjs runs this in the plugin's own Python environment. It reads one job fro
      "lang": "en", "speed": 1.0,
      "lines": [{"text": "Click New project.", "out": "/abs/path.wav", "voice": "US_James"}]}
 
-A line is spoken in a built-in "voice", or copies a "reference" ({"audio": path, "text": its words}), or
-follows a "describe" (a voice and delivery in words, for making a new narrator; "seed" picks the take).
+A line is spoken in a built-in "voice", or copies a "reference" ({"audio": path, "text": its words}), such
+as a recording of a real voice. (Ming can also make a voice from a description, but those drift in pitch
+from line to line, so walkcast doesn't use them.)
 Each clip is written as a WAV, trimmed to 50 ms of silence at each end, and one JSON line is printed:
 
     {"out": "/abs/path.wav", "duration": 1.42, "words": [{"text": "Click", "start": 0.05, "end": 0.33}, ...], "suspect": false}
@@ -82,18 +83,14 @@ def speak(line, kwargs, seed, out):
 
 for line in job["lines"]:
     kwargs = {"text": line["text"], "lang_code": lang, "verbose": False}
-    if line.get("describe"):
-        kwargs.update(instruct=line["describe"], use_zero_spk_emb=True)
-    elif line.get("reference"):
+    if line.get("reference"):
         kwargs.update(ref_audio=line["reference"]["audio"], ref_text=line["reference"]["text"])
     else:
         kwargs["voice"] = line.get("voice") or "US_James"
     if float(job.get("speed") or 1) != 1:
         kwargs["speed"] = float(job["speed"])
-    # A described narrator's seed is its voice, so its takes aren't retried with other seeds.
-    seeds = [int(line["seed"])] if line.get("seed") is not None else list(range(TRIES))
     best = None
-    for k, seed in enumerate(seeds):
+    for k, seed in enumerate(range(TRIES)):
         take = f"{line['out']}.take{k}.wav"
         duration, words = speak(line, kwargs, seed, take)
         short = cut_short(words)

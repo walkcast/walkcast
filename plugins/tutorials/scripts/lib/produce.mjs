@@ -5,7 +5,7 @@ import path from 'node:path';
 import { readYaml } from './common.mjs';
 import { approvalProblem, tourHash } from './tour.mjs';
 
-export const RENDER_VERSION = 3; // bump when the composition changes, so finished videos are rendered again
+export const RENDER_VERSION = 4; // bump when the composition changes, so finished videos are rendered again
 
 export function sha(text) {
   return crypto.createHash('sha256').update(text).digest('hex').slice(0, 16);

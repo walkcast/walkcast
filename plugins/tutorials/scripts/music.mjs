@@ -7,7 +7,7 @@
 //       tutorials/.cache/music/choices.html
 //   node music.mjs pick "<title>"
 //       Downloads the track to tutorials/assets/music/ and sets music in config.yaml, with its credit.
-//       render.mjs puts the credit on each video's closing card, and bundle.mjs on the index page.
+//       The credit goes into each video file's metadata and onto the bundle page's footer, not on screen.
 //
 // The catalog is incompetech's own machine-readable list (see incompetech.com/llms.txt), cached for a week.
 import fs from 'node:fs';
@@ -50,7 +50,7 @@ function search() {
   const page = path.join(tutorials, '.cache', 'music', 'choices.html');
   fs.mkdirSync(path.dirname(page), { recursive: true });
   fs.writeFileSync(page, choicesPage(found));
-  done({ ok: true, page: path.relative(process.cwd(), page), tracks: found, license: 'Creative Commons Attribution 4.0: free, with a credit, which pick adds for you' });
+  done({ ok: true, page: path.relative(process.cwd(), page), tracks: found, license: 'Creative Commons Attribution 4.0: free with a credit. walkcast keeps it in the video files and the bundle page; anywhere else the videos are posted, put it in the description' });
 }
 
 async function pick(title) {
@@ -128,7 +128,7 @@ section{background:var(--card);border:1px solid var(--line);border-radius:12px;p
 h2{font-size:18px;margin:0 0 2px}.meta{color:var(--muted);font-size:14px;margin:0 0 8px}audio{width:100%;margin-top:8px}
 </style></head><body><main>
 <h1>Music choices</h1>
-<p class="lede">Each plays quietly under the narration, so listen for something that doesn't pull attention. All are by Kevin MacLeod, free to use with a credit, which is added for you. Tell Claude which one you'd like, or ask for something different.</p>
+<p class="lede">Each plays quietly under the narration, so listen for something that doesn't pull attention. All are by Kevin MacLeod, free to use with a credit, which walkcast keeps out of the picture: it goes in the video files' details and the bundle page. Tell Claude which one you'd like, or ask for something different.</p>
 ${tracks.map((t) => `<section><h2>${esc(t.title)}</h2><p class="meta">${esc(t.feel)}${t.bpm ? ` · ${t.bpm} bpm` : ''} · ${esc(t.length)} · ${esc(t.instruments)}</p><p>${esc(t.about)}</p><audio controls preload="none" src="${esc(t.listen)}"></audio></section>`).join('\n')}
 </main></body></html>
 `;

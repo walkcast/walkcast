@@ -176,7 +176,7 @@ function writeVideo(id, title, src, dest) {
   fs.writeFileSync(path.join(dest, `${id}.chapters.vtt`), chaptersVtt(chapters));
   const meta = path.join(tmp, `.${id}.ffmeta`);
   const field = (s) => String(s).replace(/[=;#\\\n]/g, (c) => (c === '\n' ? ' ' : `\\${c}`));
-  fs.writeFileSync(meta, [';FFMETADATA1', `title=${field(title)}`, ...(appName ? [`album=${field(appName)}`] : []),
+  fs.writeFileSync(meta, [';FFMETADATA1', `title=${field(title)}`, ...(appName ? [`album=${field(appName)}`] : []), ...(musicCredit ? [`comment=${field(`Music: ${musicCredit.replace(/\n/g, ' · ')}`)}`] : []),
     ...chapters.flatMap((c) => ['[CHAPTER]', 'TIMEBASE=1/1000', `START=${Math.round(c.start * 1000)}`, `END=${Math.round(c.end * 1000)}`, `title=${field(c.title)}`])].join('\n') + '\n');
   // Captions go inside only when they aren't burned into the picture: MP4 players show the first caption track
   // by default, which would put them on screen twice.

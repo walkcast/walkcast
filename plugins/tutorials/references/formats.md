@@ -19,7 +19,6 @@ tutorials/
 │   └── produce/      voice.json, recording.*, render/, video.*, captions.vtt, review.html  (produce)
 ├── dist/             everything to publish, with index.html (bundle)
 ├── assets/music/     the background track music.mjs picked
-├── assets/voice/     narrator.wav, the project's own narrator, if it has one (voice.mjs --keep)
 ├── .cache/           voice/ narration clips and samples.html (voice.mjs); music/choices.html (music.mjs); app.log, app.pid (app.mjs)
 ├── .auth/            saved login sessions, one per role   (login.mjs)
 └── discovery/        working notes and crawl output       (discover)
@@ -65,17 +64,16 @@ crawl:
 audience: Team leads new to the product   # default audience for the plan
 
 voice:                            # optional: the narrator; voice.mjs --samples plays a few to choose from
-  engine: ming                    # ming (the default on Apple Silicon Macs) or kokoro (the default elsewhere)
-  voice: narrator                 # ming: narrator (the plugin's own), US_Emma, US_James, US_Stella, UK_George, UK_Charlotte
-                                  # kokoro: af_heart and others; the first letter is the language (a: American English,
-                                  # b: British, e: Spanish, f: French, i: Italian, p: Portuguese, h: Hindi), the second f or m
+  engine: kokoro                  # kokoro (the default) or ming (Apple Silicon Macs only)
+  voice: af_heart                 # kokoro: af_heart (the default) and others; the first letter is the language
+                                  # (a: American English, b: British, e: Spanish, f: French, i: Italian, p: Portuguese,
+                                  # h: Hindi), the second f or m. ming: US_Emma, UK_George, UK_Charlotte, US_James, US_Stella
   lang: en                        # ming only: en, de, es, fr, ko, ja or zh
   speed: 1.0
-  # A narrator of your own, instead of voice (ming only). voice.mjs --keep writes these after --samples --describe,
-  # or point them at a recording of a real voice, with permission: 5 to 15 seconds, with its exact words.
-  # reference: assets/voice/narrator.wav
+  # ming only: copy a recording of a real voice instead of a built-in one, with that person's permission.
+  # 5 to 15 seconds, relative to tutorials/, with its exact words.
+  # reference: assets/voice/me.wav
   # reference_text: Hi! I'll walk you through this step by step...
-  # describe: A warm, friendly woman in her thirties...   # what the narrator was made from, for the record
 
 brand:                            # optional: the video's look
   color: "#4c6ef5"                # highlights, click ripples and title cards
@@ -83,7 +81,7 @@ brand:                            # optional: the video's look
 
 music:                            # optional: looped and mixed in under the voice; none for no music
   file: assets/music/inspired.mp3 # relative to tutorials/; a plain path also works: music: assets/x.mp3
-  credit: |-                      # shown on each video's closing card and on the bundle's index page
+  credit: |-                      # kept in each video file's metadata and the bundle page's footer, never on screen
     "Inspired" Kevin MacLeod (incompetech.com)
     Licensed under Creative Commons: By Attribution 4.0
     https://creativecommons.org/licenses/by/4.0/

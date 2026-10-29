@@ -63,7 +63,7 @@ That's the only command to remember. It works out where things stand, runs the n
 **You'll need:**
 - Node 22 or later, and Claude Code.
 - `ffmpeg` and [`uv`](https://docs.astral.sh/uv/): `brew install ffmpeg uv` on macOS.
-- Disk space for a one-time download the first time it narrates: about 4.5 GB on Apple Silicon Macs (Ming-3.0), 1.2 GB elsewhere (Kokoro).
+- Disk space for a one-time download of the voice the first time it narrates: about 1.2 GB.
 
 Claude installs the browser it needs by itself.
 
@@ -75,11 +75,10 @@ Claude installs the browser it needs by itself.
   - Narration timing is measured.
   - Lines the voice cut short are caught and redone.
   - A tour that changed after you approved it won't be recorded.
-- **A narrator you choose by ear.** Pick from samples, describe one in a sentence ("a calm, friendly man in his forties"), or use a recording of your own voice.
-- **Free background music**, picked from Kevin MacLeod's catalogue, with the credit added for you.
+- **A narrator you choose by ear.** Pick from voice samples. On Apple Silicon you can also use Ming-3.0's voices, or a recording of your own voice.
 - **Plain files in your repo.** Plans, scripts, tours and SOPs live in `tutorials/` as YAML and Markdown, so you review changes in pull requests like any other code.
 - **Open models, no cloud services:**
-  - Ming-3.0 (MIT) or Kokoro (Apache-2.0) for the voice
+  - Kokoro (Apache-2.0) for the voice, or Ming-3.0 (MIT) on Apple Silicon
   - Playwright for the recording
   - HyperFrames and GSAP for the rendering
 
@@ -109,8 +108,8 @@ flowchart LR
 - **Discover** combines a code map, a crawl per role (screenshots and accessibility snapshots) and a probe that submits each form with a marker and reloads to see whether it was saved.
 - **Storyboard** resolves each step's visible label to a saved locator (`{ role: button, name: Save }`). If the UI changes, it re-resolves the step from the label and notes the repair.
 - **Voice:**
-  - Ming-3.0 runs through MLX on Apple Silicon. Kokoro runs elsewhere.
-  - Qwen3-ForcedAligner times every word, within about 30 ms of Kokoro's own timings, so the pointer clicks as the narrator finishes saying "Send invite".
+  - Kokoro reports when each word is spoken, so the pointer clicks as the narrator finishes saying "Send invite".
+  - Ming-3.0, an option on Apple Silicon through MLX, doesn't, so Qwen3-ForcedAligner times its words. It agrees with Kokoro's own timings to within about 30 ms.
 - **Recording** happens at twice the screen size while the narration plays. The pointer you see is drawn afterwards, along the same eased path the real mouse took.
 - **Rendering** is a HyperFrames composition per video: the browser window, pointer, ripples, rings, zoom, captions, and title and closing cards. ffmpeg then levels the sound and ducks the music under the voice.
 - **Demo data** is put back before every run with your reset command, so each recording starts from the same data.
@@ -142,9 +141,9 @@ Then run `/tutorials:start`. The test account is `demo@example.com` / `demo1234`
 
 **Can I edit what the narrator says?** Yes. Each tutorial's script lives in `tutorials/<id>/tour.yaml`. Change a line and run it again; only that line is re-narrated, and only that video re-rendered.
 
-**Which languages?** English is the best tested. Ming-3.0 also speaks German, Spanish, French, Korean, Japanese and Chinese.
+**Which languages?** English is the best tested. Kokoro also speaks Spanish, French, Italian, Portuguese and Hindi; Ming-3.0 on Apple Silicon adds German, Korean, Japanese and Chinese.
 
-**Does it need a GPU?** No. On Apple Silicon a minute of narration takes about a minute to generate. Elsewhere Kokoro runs on the CPU.
+**Does it need a GPU?** No. Kokoro runs on the CPU, faster than real time.
 
 ## Develop
 
@@ -160,19 +159,12 @@ See [CLAUDE.md](CLAUDE.md) for how the pieces fit together.
 - [x] discover: code map, crawl, probe, brand
 - [x] plan
 - [x] storyboard
-- [x] produce: Ming-3.0 or Kokoro, Playwright, HyperFrames, with checks
+- [x] produce: Kokoro (or Ming-3.0), Playwright, HyperFrames, with checks
 - [x] bundle: videos, captions, chapters, thumbnails, SOP PDFs, index page
 - [ ] refresh: re-run after a release, repair broken steps, re-render only what changed
 
 > **Status: early.** Every stage works end to end on the sample apps. Try it on your app and [open an issue](https://github.com/walkcast/walkcast/issues) with what breaks.
 
-## Credits
-
-- **Voice:** [Ming-3.0](https://huggingface.co/inclusionAI/Ming-3.0-tts-0.5B) (MIT) and [Kokoro](https://huggingface.co/hexgrad/Kokoro-82M) (Apache-2.0), run through [mlx-audio](https://github.com/Blaizzy/mlx-audio), with [Qwen3-ForcedAligner](https://huggingface.co/mlx-community/Qwen3-ForcedAligner-0.6B-8bit) timing the words.
-- **Recording:** [Playwright](https://playwright.dev).
-- **Rendering:** [HyperFrames](https://www.npmjs.com/package/hyperframes) and [GSAP](https://gsap.com).
-- **Demo music:** “Inspired” Kevin MacLeod ([incompetech.com](https://incompetech.com)), licensed under Creative Commons: By Attribution 4.0 ([creativecommons.org/licenses/by/4.0](https://creativecommons.org/licenses/by/4.0/)).
-
 ## License
 
-[MIT](LICENSE)
+[MIT](LICENSE). Demo music: “Inspired” by Kevin MacLeod (incompetech.com), [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/).

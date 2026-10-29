@@ -123,7 +123,9 @@ function build({ id, tour, voice, rec, prod, files, inputs }) {
     ? ['-stream_loop', '-1', '-i', music, '-filter_complex', `[0:a]asplit=2[v][key];[1:a]volume=0.22,afade=t=out:st=${round(comp.total - 2.5, 2)}:d=2.5[m];[m][key]sidechaincompress=threshold=0.02:ratio=10:attack=15:release=450[duck];[v][duck]amix=inputs=2:normalize=0:duration=first,${level}[a]`, '-map', '0:v', '-map', '[a]']
     : ['-af', level];
   const temp = path.join(prod, `video.tmp-${process.pid}.mp4`);
-  const f = spawnSync('ffmpeg', ['-y', '-loglevel', 'error', '-i', raw, ...mix, '-c:v', 'copy', '-c:a', 'aac', '-b:a', '192k', '-ar', '48000', '-t', String(comp.total), '-movflags', '+faststart', temp], { encoding: 'utf8' });
+  // A music credit travels inside the file rather than on screen.
+  const credit = musicOf(cfg)?.credit ? ['-metadata', `comment=Music: ${musicOf(cfg).credit.replace(/\n/g, ' · ')}`] : [];
+  const f = spawnSync('ffmpeg', ['-y', '-loglevel', 'error', '-i', raw, ...mix, '-c:v', 'copy', '-c:a', 'aac', '-b:a', '192k', '-ar', '48000', '-t', String(comp.total), ...credit, '-movflags', '+faststart', temp], { encoding: 'utf8' });
   fs.rmSync(raw, { force: true });
   if (f.status !== 0) {
     fs.rmSync(temp, { force: true });
@@ -289,7 +291,6 @@ html, body { width: ${W}px; height: ${H}px; overflow: hidden; background: var(--
 #outro { opacity: 0; }
 #outro .eyebrow { color: rgba(255,255,255,.65); }
 #outro h1 { font-size: 72px; }
-#outro .credit { position: absolute; left: 200px; right: 200px; bottom: 64px; font-size: 20px; line-height: 1.45; color: rgba(255,255,255,.55); }
 #main { position: absolute; inset: 0; opacity: 0; }
 #window { position: absolute; left: ${winX}px; top: ${winY}px; width: ${cw}px; height: ${ch + BAR}px; border-radius: 14px; overflow: hidden; background: #fff;
   box-shadow: 0 40px 90px rgba(0,0,0,.45), 0 0 0 1px rgba(255,255,255,.08); }
@@ -338,7 +339,7 @@ ${(look.captions ? captions : []).map((c, k) => '    ' + timed('caption', c.t0, 
     ${upNext ? '<div class="eyebrow">Up next</div>' : appName ? `<div class="eyebrow">${esc(appName)}</div>` : ''}
     <h1>${esc(upNext || tour.title || id)}</h1>
     <div class="rule"></div>
-${musicOf(cfg)?.credit ? `    <div class="credit">${musicOf(cfg).credit.split('\n').map(esc).join('<br>')}</div>\n` : ''}  </div>
+  </div>
 ${audio.map((a, k) => `  <audio id="voice-${k + 1}" src="${a.src}" data-start="${a.t}" data-duration="${a.d}" data-volume="1"></audio>`).join('\n')}
 </div>
 <script id="timeline-data" type="application/json">${JSON.stringify(data)}</script>

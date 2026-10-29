@@ -63,9 +63,9 @@ if (later >= 2) {
   add('ffmpeg', ff.status === 0 && /libx264/.test(ff.stdout), ff.status === 0 ? (/libx264/.test(ff.stdout) ? 'with libx264' : 'without libx264') : 'not found', 'brew install ffmpeg (macOS), or your package manager\'s ffmpeg with libx264');
   const uv = spawnSync('uv', ['--version'], { encoding: 'utf8' });
   add('uv', uv.status === 0, uv.status === 0 ? uv.stdout.trim() : 'not found', 'brew install uv, or curl -LsSf https://astral.sh/uv/install.sh | sh');
-  // Ming (MLX) is the default on Apple Silicon, Kokoro everywhere else; config.yaml's voice.engine overrides.
+  // Kokoro is the default; config.yaml's voice.engine can choose Ming (MLX, Apple Silicon only).
   const appleSilicon = process.platform === 'darwin' && process.arch === 'arm64';
-  const engine = cfg?.voice?.engine || (appleSilicon ? 'ming' : 'kokoro');
+  const engine = cfg?.voice?.engine || 'kokoro';
   if (engine === 'ming' && !appleSilicon) add('voice engine', false, 'ming runs only on Apple Silicon Macs', 'Set voice.engine to kokoro in tutorials/config.yaml.');
   else {
     const venv = path.join(dataDir(), 'voice', engine);

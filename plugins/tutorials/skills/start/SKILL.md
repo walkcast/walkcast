@@ -36,7 +36,7 @@ Run the stage in `next` by following its skill (`/tutorials:<stage>`), with the 
 Never approve a plan or a storyboard on the user's behalf.
 
 Before a long step, say what's about to happen and roughly how long it takes:
-- The first narration installs the voice engine: about 4.5 GB on Apple Silicon Macs (1.2 GB elsewhere), a few minutes, once.
+- The first narration installs the voice engine: about 1.2 GB, a few minutes, once.
 - Recording takes about as long as each video.
 - Rendering takes a minute or two per video.
 

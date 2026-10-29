@@ -17,5 +17,3 @@ crawl:
 
 audience: Support agents new to Helpdesk
 
-voice:
-  engine: kokoro   # keeps the tests covering Kokoro; the sample app uses Ming's narrator

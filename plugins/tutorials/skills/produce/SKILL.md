@@ -5,7 +5,7 @@ argument-hint: "[tutorial ids, default: every video in the plan]"
 
 # Produce the videos
 
-Make the finished MP4 for each video in the plan, and check it. Everything runs on this machine: Ming-3.0 (on Apple Silicon Macs) or Kokoro reads the narration, Playwright records the app, and HyperFrames renders the video, with ffmpeg for encoding and sound.
+Make the finished MP4 for each video in the plan, and check it. Everything runs on this machine: Kokoro (or Ming-3.0 on Apple Silicon, if chosen) reads the narration, Playwright records the app, and HyperFrames renders the video, with ffmpeg for encoding and sound.
 
 Before you start, read `${CLAUDE_PLUGIN_ROOT}/references/formats.md` (the `voice`, `brand`, `video`, `music`, `app.reset` and `app.display_url` settings, and the produce output).
 
@@ -36,17 +36,17 @@ Run them from the project root. Each takes tutorial ids, or does every video in 
 
 Skip this if config.yaml already has `voice.voice` and `music` (a track, or `none`). Otherwise, prepare both choices before asking, and ask about them in one message:
 
-1. Run `voice.mjs --samples`. The first time, this installs the voice engine (see below). Offer to open `tutorials/.cache/voice/samples.html`. It plays one line in the plugin's narrator and Ming's built-in voices, plus two Kokoro voices; on machines without Apple Silicon, six Kokoro voices. If the user wants a voice that isn't there, describe it: `voice.mjs --samples --describe "a calm, friendly man in his forties, unhurried"` makes three takes of a new narrator, and `voice.mjs --keep <take>` keeps one for this project. They can also use a recording of a real voice, with that person's permission: set `voice.reference` and `voice.reference_text` (see formats.md).
-2. Run `music.mjs search`. Offer to open `tutorials/.cache/music/choices.html`. If the app has a clear mood, pass `--feel` (Bright, Relaxed, Calming, Uplifting, Grooving, Bouncy) or `--q` with an instrument such as piano. The tracks are free under CC BY 4.0, which needs a credit; pick adds it to each video's closing card and to the bundle.
-3. When the user answers, set `voice.engine` and `voice.voice` in config.yaml (or run `--keep`), and run `music.mjs pick "<title>"` or set `music: none`.
+1. Run `voice.mjs --samples`. The first time, this installs the voice engine (see below). Offer to open `tutorials/.cache/voice/samples.html`. It plays one line in six Kokoro voices, plus three of Ming's built-in voices on Apple Silicon Macs. Kokoro's af_heart is the default. On Apple Silicon, Ming can also copy a recording of a real voice, with that person's permission: set `voice.engine: ming`, `voice.reference` and `voice.reference_text` (see formats.md).
+2. Run `music.mjs search`. Offer to open `tutorials/.cache/music/choices.html`. If the app has a clear mood, pass `--feel` (Bright, Relaxed, Calming, Uplifting, Grooving, Bouncy) or `--q` with an instrument such as piano. The tracks are free under CC BY 4.0, which needs a credit. pick keeps it out of the picture: it goes in each video file's metadata and the bundle page's footer. When the user posts a video somewhere else, the credit belongs in its description. If they want no credit anywhere, use a track they have without attribution terms (a file of theirs, or one from Pixabay Music) as `music: assets/music/<file>.mp3`, or `music: none`.
+3. When the user answers, set `voice.voice` in config.yaml (and `voice.engine: ming` for a Ming voice), and run `music.mjs pick "<title>"` or set `music: none`.
 
 If `brand.color` isn't set either, run look.mjs and set `brand` from `suggest.brand`, and tell the user which color you used.
 
 ## 2. Narrate
 
-Run `voice.mjs`. The first run sets up the voice engine in the plugin's data folder and downloads it and its models, about 4.5 GB for Ming or 1.2 GB for Kokoro, so tell the user it takes a few minutes once. Ming takes about as long as the narration lasts; Kokoro is quicker.
+Run `voice.mjs`. The first run sets up the voice engine in the plugin's data folder and downloads it and its models, about 1.2 GB for Kokoro (4.5 GB if the project uses Ming), so tell the user it takes a few minutes once.
 
-The result lists any steps without word timings. That happens with Kokoro's non-English voices; for those steps the action lands at its `cue` or halfway through the line, instead of on the spoken label. Ming's clips are timed by an aligner in every language it speaks.
+The result lists any steps without word timings. That happens with Kokoro's non-English voices; for those steps the action lands at its `cue` or halfway through the line, instead of on the spoken label. Ming's clips are timed by an aligner in every language it speaks. With Ming, `cut_short` lists lines it stopped early on in every take: listen to them, and reword or shorten the line if one is cut off.
 
 ## 3. Record
 

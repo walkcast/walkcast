@@ -177,10 +177,10 @@ describe('sample app (server-rendered, with a login)', () => {
     assert.equal(sb.ok, true, JSON.stringify(sb));
     const approve = p.run('storyboard.mjs', '--approve', id);
     assert.deepEqual(approve.approved, [id], JSON.stringify(approve));
-    // Ming is the default narrator on Apple Silicon, Kokoro elsewhere; the helpdesk pins Kokoro.
+    // Kokoro is the default narrator.
     const voice = p.run('voice.mjs', id);
     assert.equal(voice.ok, true, JSON.stringify(voice));
-    assert.equal(voice.engine, appleSilicon ? 'ming' : 'kokoro');
+    assert.equal(voice.engine, 'kokoro');
     assert.deepEqual(voice.tours[0].without_word_timings, []);
     const rec = p.run('record.mjs', id);
     assert.equal(rec.ok, true, JSON.stringify(rec));
@@ -193,13 +193,19 @@ describe('sample app (server-rendered, with a login)', () => {
     bundled(p, id);
   });
 
-  test('describes a new narrator, keeps a take, and narrates with it', { skip: (!full && 'set E2E_FULL=1') || (!appleSilicon && 'Ming needs Apple Silicon') }, () => {
-    const takes = p.run('voice.mjs', '--samples', '--describe', 'A calm, friendly man in his forties, unhurried and reassuring.', '--takes', '1');
-    assert.equal(takes.voices?.length, 1, JSON.stringify(takes));
-    assert.equal(p.run('voice.mjs', '--keep', '1').ok, true);
-    const voice = p.run('voice.mjs', 'invite-a-teammate');
-    assert.equal(voice.voice, 'assets/voice/narrator.wav', JSON.stringify(voice));
-    assert.deepEqual(voice.tours[0].without_word_timings, []);
+  test('narrates with a built-in Ming voice, with every word timed', { skip: (!full && 'set E2E_FULL=1') || (!appleSilicon && 'Ming needs Apple Silicon') }, () => {
+    const cfgFile = path.join(p.tutorials, 'config.yaml');
+    const original = fs.readFileSync(cfgFile, 'utf8');
+    fs.writeFileSync(cfgFile, `${original}\nvoice:\n  engine: ming\n  voice: US_Emma\n`);
+    try {
+      const voice = p.run('voice.mjs', 'invite-a-teammate');
+      assert.equal(voice.engine, 'ming', JSON.stringify(voice));
+      assert.equal(voice.voice, 'US_Emma');
+      assert.deepEqual(voice.tours[0].without_word_timings, []);
+      assert.deepEqual(voice.tours[0].cut_short, []);
+    } finally {
+      fs.writeFileSync(cfgFile, original);
+    }
   });
 });
 
@@ -261,7 +267,10 @@ describe('helpdesk app (single-page, no login)', () => {
     const render = p.run('render.mjs', id);
     assert.equal(render.ok, true, JSON.stringify(render));
     assert.deepEqual(render.tours[0].problems, []);
-    assert.match(fs.readFileSync(path.join(p.tutorials, id, 'produce', 'render', 'index.html'), 'utf8'), /class="credit">&quot;Somewhere Sunny/);
+    // The music credit rides in the file's metadata, not on screen.
+    assert.doesNotMatch(fs.readFileSync(path.join(p.tutorials, id, 'produce', 'render', 'index.html'), 'utf8'), /Kevin MacLeod/);
+    const tags = spawnSync('ffprobe', ['-v', 'error', '-show_entries', 'format_tags=comment', '-of', 'csv=p=0', path.join(p.tutorials, id, 'produce', 'video.mp4')], { encoding: 'utf8' }).stdout;
+    assert.match(tags, /Somewhere Sunny.*Kevin MacLeod/);
     bundled(p, id);
     assert.match(JSON.parse(fs.readFileSync(path.join(p.tutorials, 'dist', 'tutorials.json'), 'utf8')).music_credit, /Kevin MacLeod/);
   });

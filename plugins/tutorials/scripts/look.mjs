@@ -79,7 +79,7 @@ const result = {
   suggest: {
     brand: color ? { color, background } : null,
     display_url: publicUrl ? publicUrl.origin : null,
-    voice: lang && !lang.startsWith('en') ? `The app is in "${lang}". Set voice.lang to ${lang.slice(0, 2)} if Ming speaks it (de, es, fr, ko, ja, zh).` : lang.startsWith('en-gb') ? 'UK_Charlotte or UK_George' : null,
+    voice: lang && !lang.startsWith('en') ? `The app is in "${lang}". Kokoro speaks es, fr, it, pt and hi; Ming (Apple Silicon) adds de, ko, ja and zh.` : lang.startsWith('en-gb') ? 'UK_Charlotte or UK_George' : null,
   },
 };
 writeJson(path.join(tutorials, 'discovery', 'look.json'), result);

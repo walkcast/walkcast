@@ -82,7 +82,7 @@ Then run look.mjs, and set the videos' look in config.yaml from it and the code:
 
 - **`brand.color` and `brand.background`:** start from `suggest.brand`. Check them against the code's theme: Tailwind config, CSS custom properties such as `--primary`, or a theme file. Use the code's value when it names the brand color and look.mjs picked something else.
 - **`app.display_url`:** the address the videos show instead of localhost. Use `public_url` if look.mjs found one. Otherwise look in the code: `homepage` in package.json, the README, `.env.example` (`APP_URL`, `NEXT_PUBLIC_SITE_URL` and similar), deploy config such as `CNAME`, `vercel.json` or `fly.toml`, or a canonical link. Leave it unset if none of these say.
-- **The narrator:** if `lang` isn't English, set `voice.lang` (Ming speaks German, Spanish, French, Korean, Japanese and Chinese) and note it for the report. Without Apple Silicon the narrator is Kokoro, which has no German, for example.
+- **The narrator:** if `lang` isn't English, note it for the report. Kokoro speaks Spanish, French, Italian, Portuguese and Hindi too; on Apple Silicon, Ming adds German, Korean, Japanese and Chinese (`voice.engine: ming`, `voice.lang`).
 
 ## 6. Write tutorials/features.yaml
 
