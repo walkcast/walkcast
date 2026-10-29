@@ -1,0 +1,38 @@
+# Written by hand to test storyboard and produce on a single-page app.
+status: approved
+approved_at: 2026-10-29
+audience: Support agents new to Helpdesk
+
+items:
+  - id: create-a-ticket
+    kind: video
+    title: Log a new ticket
+    audience: Support agents
+    goal: After this video you can log a ticket with the right priority.
+    features: [create-ticket]
+    prerequisites: [Helpdesk open in the browser]
+    demo_data: [The starting 40 tickets]
+    duration_sec: 40
+    steps:
+      - Click New ticket
+      - Give the ticket a title
+      - Set its priority from the Priority menu
+      - Click Create ticket
+    opening: Every request starts as a ticket. Here's how to log one.
+    closing: That's it. Next, see how to mark a ticket solved.
+
+  - id: solve-a-ticket
+    kind: video
+    title: Mark a ticket solved
+    audience: Support agents
+    goal: After this video you can find a ticket and mark it solved.
+    features: [solve-ticket]
+    prerequisites: [Helpdesk open in the browser]
+    demo_data: [The printer ticket, still open, near the bottom of the inbox]
+    duration_sec: 30
+    steps:
+      - Look over the inbox
+      - Open the ticket you've fixed
+      - Click Mark as solved
+    opening: When a problem is fixed, mark its ticket solved so the team knows it's done.
+    closing: The ticket now shows as solved, on its page and in the inbox.

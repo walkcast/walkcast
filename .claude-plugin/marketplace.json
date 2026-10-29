@@ -1,0 +1,14 @@
+{
+  "name": "walkcast",
+  "description": "walkcast: Claude Code plugins that turn your app into narrated tutorial videos and SOPs",
+  "owner": {
+    "name": "walkcast"
+  },
+  "plugins": [
+    {
+      "name": "tutorials",
+      "source": "./plugins/tutorials",
+      "description": "Claude maps every feature of your app from its code and running UI, proposes tutorial videos and SOPs, and builds them after you approve."
+    }
+  ]
+}

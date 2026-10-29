@@ -1,0 +1,44 @@
+id: invite-a-teammate
+title: Invite a teammate
+role: owner
+start: /dashboard
+approved_at: 2026-10-29
+approved_hash: 393142f1bc3dde0b
+steps:
+  - say: Projects move faster with your team in them. Here's how to invite someone.
+  - do: click
+    target: Settings
+    say: Open Settings from the sidebar.
+    expect: The Settings page with Members and Billing
+    expect_text: Invite people and change roles.
+    locator: { role: link, name: Settings }
+  - do: click
+    target: Members
+    say: Then click Members.
+    expect: The Members page
+    expect_text: Invite a teammate
+    locator: { role: link, name: Members }
+  - do: show
+    target: Email
+    say: Here's everyone on the team, with their email and role.
+    cue: everyone on the team
+    locator: { css: main table }
+  - do: type
+    target: Email address
+    text: alex@example.com
+    say: To add someone, enter their email address under Invite a teammate.
+    cue: their email address
+    locator: { role: textbox, name: Email address }
+  - do: select
+    target: Role
+    option: Admin
+    say: Choose their role, Member or Admin.
+    locator: { role: combobox, name: Role }
+  - do: click
+    target: Send invite
+    say: Click Send invite.
+    expect: Invite sent to alex@example.com, and an Invite pending row for alex@example.com with role Admin
+    expect_text: [ Invite sent to alex@example.com., Invite pending ]
+    locator: { role: button, name: Send invite }
+  - say: Acme confirms the invite and lists them as Invite pending, with the role you chose.
+  - say: Invite the rest of your team the same way.

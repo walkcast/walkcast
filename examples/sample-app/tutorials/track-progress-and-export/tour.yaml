@@ -1,0 +1,31 @@
+id: track-progress-and-export
+title: Track progress and export a CSV
+role: owner
+start: /dashboard
+approved_at: 2026-10-29
+approved_hash: 52c423e30a03c3ca
+steps:
+  - say: Want to know how your team is doing? Acme shows you in two places.
+  - do: show
+    target: Open projects
+    say: The Dashboard has the headline numbers, like open projects, tasks due this week, and team members.
+    cue: the headline numbers
+    locator: { css: main .grid }
+  - do: click
+    target: Reports
+    say: For more detail, open Reports from the sidebar.
+    expect: The Reports page
+    expect_text: Tasks completed
+    locator: { role: link, name: Reports }
+  - do: show
+    target: Tasks completed
+    say: Here you see how many tasks were completed, and the average time to close one.
+    cue: how many tasks were completed
+    locator: { text: Tasks completed, exact: false }
+  - do: click
+    target: Export CSV
+    say: Click Export CSV to download every project with its number of tasks.
+    expect: export.csv downloads and the page stays on Reports
+    expect_text: Tasks completed
+    locator: { role: link, name: Export CSV }
+  - say: Open the file in any spreadsheet app to share it. Next, invite your team.

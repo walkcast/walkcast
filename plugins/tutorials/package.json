@@ -1,0 +1,20 @@
+{
+  "name": "tutorials-plugin-scripts",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Helper scripts used by the tutorials Claude Code plugin",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "gsap": "3.14.2",
+    "hyperframes": "0.8.216",
+    "marked": "18.1.1",
+    "playwright": "1.63.0",
+    "yaml": "2.9.1"
+  },
+  "overrides": {
+    "undici": "7.30.1"
+  }
+}

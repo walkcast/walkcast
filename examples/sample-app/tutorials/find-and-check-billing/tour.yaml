@@ -1,0 +1,29 @@
+id: find-and-check-billing
+title: Check your plan and invoices
+role: owner
+start: /dashboard
+approved_at: 2026-10-29
+approved_hash: b88461f719b40546
+steps:
+  - do: click
+    target: Settings
+    say: Open Settings from the sidebar.
+    expect: The Settings page with Members and Billing
+    expect_text: Plan and invoices.
+    locator: { role: link, name: Settings }
+  - do: click
+    target: Billing
+    say: Click Billing.
+    expect: The Billing page
+    expect_text: Team plan
+    locator: { role: link, name: Billing }
+  - do: show
+    target: Team plan
+    say: The top line shows your plan, number of seats and renewal date.
+    cue: the top line
+    locator: { text: Team plan, exact: false }
+  - do: show
+    target: Invoice
+    say: Each past invoice is listed by month, with its amount.
+    cue: each past invoice
+    locator: { css: main table }

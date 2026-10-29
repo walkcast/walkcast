@@ -1,0 +1,26 @@
+id: solve-a-ticket
+title: Mark a ticket solved
+start: /
+approved_at: 2026-10-29
+approved_hash: 434fb02477422ec0
+steps:
+  - say: When a problem is fixed, mark its ticket solved so the team knows it's done.
+  - do: show
+    target: Inbox
+    say: The inbox lists every ticket, newest first.
+    cue: the inbox lists every ticket
+    locator: { css: main .tickets }
+  - do: click
+    target: Printer on the third floor is jammed
+    say: Open the ticket you've fixed. Here it's the jammed printer.
+    cue: the jammed printer
+    expect: The ticket's page
+    expect_text: Mark as solved
+    locator: { role: link, name: Printer on the third floor is jammed }
+  - do: click
+    target: Mark as solved
+    say: Click Mark as solved.
+    expect: A Ticket solved message, and the ticket marked Solved
+    expect_text: [ Ticket solved, Solved ]
+    locator: { role: button, name: Mark as solved }
+  - say: The ticket now shows as solved, on its page and in the inbox.

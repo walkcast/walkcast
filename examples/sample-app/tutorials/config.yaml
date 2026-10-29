@@ -1,0 +1,31 @@
+# Example config for the sample app. Your app's config lives in its own tutorials/ folder.
+app:
+  name: Acme Projects
+  url: http://localhost:4321
+  start: npm run dev
+  cwd: .
+  ready_timeout: 30
+  reset: curl -fsS -X POST http://localhost:4321/__reset   # puts the demo data back before each tour
+  display_url: https://app.acme.example   # what the videos' address bar shows (.example is reserved, so it's nobody's site)
+
+roles:
+  - id: owner
+    description: Workspace owner; sees projects, reports and every setting
+    login:
+      url: /login
+      username: ${ACME_EMAIL}        # demo@example.com
+      password: ${ACME_PASSWORD}     # demo1234
+      success: /dashboard
+
+crawl:
+  start: [/dashboard]
+  max_pages: 40
+  per_pattern: 2
+  exclude: ["^/api/"]
+  viewport: { width: 1440, height: 900 }
+
+audience: Team leads trying Acme Projects for the first time
+
+brand:                     # measured from the app's own buttons and sidebar by look.mjs
+  color: "#3b5bdb"
+  background: "#191d26"

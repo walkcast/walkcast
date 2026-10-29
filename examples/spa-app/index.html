@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Helpdesk</title>
+<style>
+*{box-sizing:border-box}[hidden]{display:none!important}body{margin:0;font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif;color:#1d2433;background:#f4f6fa}
+a{color:#2f6fed;text-decoration:none}a:hover{text-decoration:underline}
+header{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:28px;height:60px;padding:0 32px;background:#fff;border-bottom:1px solid #e3e7ef}
+header strong{font-size:18px}header nav{display:flex;gap:6px;flex:1}header nav a{padding:6px 12px;border-radius:7px;color:#3d4659}
+header nav a.on{background:#eef3ff;color:#2f6fed;font-weight:600}
+button{font:inherit;cursor:pointer;border-radius:8px;padding:8px 16px;border:1px solid #cfd6e3;background:#fff;color:#1d2433}
+button.primary{background:#2f6fed;border-color:#2f6fed;color:#fff}button:disabled{opacity:.55;cursor:default}
+main{max-width:980px;margin:0 auto;padding:28px 32px 80px}h1{font-size:26px;margin:0 0 4px}.muted{color:#69728a}
+.tickets{list-style:none;margin:18px 0 0;padding:0;background:#fff;border:1px solid #e3e7ef;border-radius:12px}
+.tickets li{display:flex;align-items:center;gap:12px;padding:12px 18px;border-bottom:1px solid #eef1f6}.tickets li:last-child{border-bottom:0}
+.tickets li a{flex:1}.compact .tickets li{padding:6px 18px}
+.chip{font-size:12px;font-weight:600;padding:2px 9px;border-radius:999px;background:#eef1f6;color:#4a5368}.chip.High{background:#ffe8e6;color:#c4320a}.chip.Low{background:#e9f7ef;color:#227a45}
+.status{font-size:13px;color:#69728a;min-width:56px;text-align:right}.status.Solved{color:#227a45;font-weight:600}
+.loading{margin-top:18px;color:#69728a}
+.card{background:#fff;border:1px solid #e3e7ef;border-radius:12px;padding:20px;margin-top:18px}
+label{display:block;font-weight:600;margin:14px 0 6px}input[type=text],textarea{width:100%;padding:9px 11px;border:1px solid #cfd6e3;border-radius:8px;font:inherit}
+.switch{display:flex;align-items:center;gap:10px;font-weight:500}
+.backdrop{position:fixed;inset:0;z-index:10;display:grid;place-items:center;background:rgba(20,26,40,0);transition:background .18s}
+.backdrop.open{background:rgba(20,26,40,.42)}
+[role=dialog]{width:480px;background:#fff;border-radius:14px;padding:24px;box-shadow:0 30px 70px rgba(0,0,0,.25);opacity:0;transform:translateY(10px) scale(.97);transition:opacity .18s,transform .18s}
+.backdrop.open [role=dialog]{opacity:1;transform:none}[role=dialog] h2{margin:0 0 4px;font-size:20px}
+.dropdown{position:relative}.dropdown>button{min-width:150px;text-align:left}
+[role=menu]{position:absolute;left:0;top:44px;z-index:2;min-width:150px;background:#fff;border:1px solid #d9dfea;border-radius:10px;padding:4px;box-shadow:0 12px 30px rgba(0,0,0,.14)}
+[role=menuitemradio]{padding:7px 12px;border-radius:7px;cursor:pointer}[role=menuitemradio]:hover{background:#eef3ff}[role=menuitemradio][aria-checked=true]{font-weight:600}
+.actions{display:flex;justify-content:flex-end;gap:10px;margin-top:22px}
+#toast{position:fixed;left:50%;bottom:28px;z-index:20;transform:translate(-50%,20px);padding:10px 18px;border-radius:10px;background:#1d2433;color:#fff;opacity:0;transition:opacity .2s,transform .2s;pointer-events:none}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+</style>
+</head>
+<body>
+<header>
+  <strong>Helpdesk</strong>
+  <nav aria-label="Main"><a href="/" data-nav="/">Inbox</a><a href="/settings" data-nav="/settings">Settings</a></nav>
+  <button class="primary" id="new-ticket">New ticket</button>
+</header>
+<main id="view"></main>
+<div class="backdrop" id="modal" hidden>
+  <div role="dialog" aria-modal="true" aria-labelledby="dialog-title">
+    <h2 id="dialog-title">New ticket</h2>
+    <p class="muted">Describe the problem in a line. You can add details later.</p>
+    <form id="ticket-form">
+      <label for="ticket-title">Title</label>
+      <input type="text" id="ticket-title" required autocomplete="off">
+      <label id="priority-label">Priority</label>
+      <div class="dropdown">
+        <button type="button" id="priority" aria-label="Priority" aria-haspopup="menu" aria-expanded="false"><span id="priority-value">Normal</span> ▾</button>
+        <div role="menu" id="priority-menu" aria-label="Priority" hidden>
+          <div role="menuitemradio" aria-checked="false">Low</div>
+          <div role="menuitemradio" aria-checked="true">Normal</div>
+          <div role="menuitemradio" aria-checked="false">High</div>
+        </div>
+      </div>
+      <div class="actions"><button type="button" id="cancel">Cancel</button><button type="submit" class="primary">Create ticket</button></div>
+    </form>
+  </div>
+</div>
+<div id="toast" role="status" aria-live="polite"></div>
+<script>
+const view = document.getElementById('view');
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+let compact = false;
+
+function toast(text) {
+  const t = document.getElementById('toast');
+  t.textContent = text;
+  t.classList.add('show');
+  clearTimeout(toast.timer);
+  toast.timer = setTimeout(() => t.classList.remove('show'), 2600);
+}
+
+// Client-side routing: links change the address without reloading the page.
+function go(path) {
+  history.pushState({}, '', path);
+  render();
+}
+document.addEventListener('click', (e) => {
+  const a = e.target.closest('a[href^="/"]');
+  if (a && !e.metaKey && !e.ctrlKey) { e.preventDefault(); go(a.getAttribute('href')); }
+});
+addEventListener('popstate', render);
+
+async function render() {
+  const p = location.pathname;
+  document.querySelectorAll('[data-nav]').forEach((a) => a.classList.toggle('on', a.dataset.nav === p || (p.startsWith('/tickets') && a.dataset.nav === '/')));
+  const ticket = p.match(/^\/tickets\/(\d+)$/);
+  if (ticket) return renderTicket(ticket[1]);
+  if (p === '/settings') return renderSettings();
+  return renderInbox();
+}
+
+async function renderInbox() {
+  document.title = 'Inbox · Helpdesk';
+  view.innerHTML = '<h1>Inbox</h1><p class="loading">Loading tickets…</p>';
+  const tickets = await (await fetch('/api/tickets')).json();
+  if (location.pathname !== '/') return;
+  const open = tickets.filter((t) => t.status === 'Open').length;
+  view.innerHTML = `<h1>Inbox</h1><p class="muted">${open} open tickets</p>
+    <ul class="tickets${compact ? ' compact' : ''}">${tickets.map((t) => `<li><a href="/tickets/${t.id}">${esc(t.title)}</a><span class="chip ${t.priority}">${t.priority}</span><span class="status ${t.status}">${t.status}</span></li>`).join('')}</ul>`;
+}
+
+async function renderTicket(id) {
+  view.innerHTML = '<p class="loading">Loading ticket…</p>';
+  const res = await fetch(`/api/tickets/${id}`);
+  if (!res.ok) { view.innerHTML = '<h1>Ticket not found</h1><p><a href="/">Back to the inbox</a></p>'; return; }
+  const t = await res.json();
+  document.title = `${t.title} · Helpdesk`;
+  view.innerHTML = `<p><a href="/">← Back to the inbox</a></p><h1>${esc(t.title)}</h1>
+    <p class="muted">Ticket #${t.id} · <span class="chip ${t.priority}">${t.priority}</span> · <span class="status ${t.status}">${t.status}</span></p>
+    <div class="card"><p>Reported by the help form. Reply to the requester from your email, then mark the ticket solved here.</p>
+    <button class="primary" id="solve" ${t.status === 'Solved' ? 'disabled' : ''}>${t.status === 'Solved' ? 'Solved' : 'Mark as solved'}</button></div>`;
+  document.getElementById('solve').onclick = async () => {
+    await fetch(`/api/tickets/${t.id}/solve`, { method: 'POST' });
+    toast('Ticket solved');
+    renderTicket(t.id);
+  };
+}
+
+function renderSettings() {
+  document.title = 'Settings · Helpdesk';
+  view.innerHTML = `<h1>Settings</h1>
+    <div class="card"><h2>Display</h2><label class="switch"><input type="checkbox" role="switch" id="compact" ${compact ? 'checked' : ''}> Compact rows</label></div>
+    <div class="card"><h2>Feedback</h2><form id="feedback"><label for="feedback-text">Feedback</label><textarea id="feedback-text" rows="3" required></textarea>
+    <div class="actions"><button type="submit" class="primary">Send feedback</button></div></form></div>`;
+  document.getElementById('compact').onchange = (e) => { compact = e.target.checked; };
+  document.getElementById('feedback').onsubmit = async (e) => {
+    e.preventDefault();
+    await fetch('/api/feedback', { method: 'POST', body: JSON.stringify({ text: e.target.elements[0].value }) });
+    e.target.reset();
+    toast('Thanks for the feedback');
+  };
+}
+
+// The New ticket dialog, with its priority menu.
+const modal = document.getElementById('modal');
+const form = document.getElementById('ticket-form');
+const menu = document.getElementById('priority-menu');
+const priority = document.getElementById('priority');
+function openModal() {
+  form.reset();
+  setPriority('Normal');
+  modal.hidden = false;
+  requestAnimationFrame(() => requestAnimationFrame(() => modal.classList.add('open')));
+  setTimeout(() => document.getElementById('ticket-title').focus(), 50);
+}
+function closeModal() {
+  modal.classList.remove('open');
+  menu.hidden = true;
+  setTimeout(() => { modal.hidden = true; }, 180);
+}
+function setPriority(value) {
+  document.getElementById('priority-value').textContent = value;
+  menu.querySelectorAll('[role=menuitemradio]').forEach((item) => item.setAttribute('aria-checked', String(item.textContent === value)));
+}
+document.getElementById('new-ticket').onclick = openModal;
+document.getElementById('cancel').onclick = closeModal;
+priority.onclick = () => {
+  menu.hidden = !menu.hidden;
+  priority.setAttribute('aria-expanded', String(!menu.hidden));
+};
+menu.onclick = (e) => {
+  const item = e.target.closest('[role=menuitemradio]');
+  if (!item) return;
+  setPriority(item.textContent);
+  menu.hidden = true;
+  priority.setAttribute('aria-expanded', 'false');
+};
+form.onsubmit = async (e) => {
+  e.preventDefault();
+  const button = form.querySelector('[type=submit]');
+  button.disabled = true;
+  const res = await fetch('/api/tickets', { method: 'POST', body: JSON.stringify({ title: document.getElementById('ticket-title').value, priority: document.getElementById('priority-value').textContent }) });
+  button.disabled = false;
+  if (!res.ok) return toast((await res.json()).error);
+  closeModal();
+  toast('Ticket created');
+  if (location.pathname === '/') renderInbox();
+  else go('/');
+};
+
+render();
+</script>
+</body>
+</html>

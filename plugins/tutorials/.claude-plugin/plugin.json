@@ -1,0 +1,18 @@
+{
+  "name": "tutorials",
+  "description": "Turn your app into narrated tutorial videos and SOPs. Claude maps every feature from your code and running UI, proposes the tutorials, and builds them after you approve.",
+  "author": {
+    "name": "walkcast"
+  },
+  "license": "MIT",
+  "keywords": [
+    "tutorials",
+    "sop",
+    "documentation",
+    "video",
+    "playwright",
+    "walkthrough"
+  ],
+  "homepage": "https://github.com/walkcast/walkcast",
+  "repository": "https://github.com/walkcast/walkcast"
+}

@@ -1,0 +1,33 @@
+id: find-a-project-and-tick-off-tasks
+title: Find a project and tick off tasks
+role: owner
+start: /dashboard
+approved_at: 2026-10-29
+approved_hash: 3d2ddc1522f5156f
+steps:
+  - say: Your projects are always a click away. Here's how to find one and tick off finished tasks.
+  - do: click
+    target: Projects
+    say: Open Projects from the sidebar.
+    expect: The Projects list
+    expect_text: Search projects
+    locator: { role: link, name: Projects }
+  - do: show
+    target: Owner
+    say: Every project is listed with its owner and how many tasks it has.
+    cue: every project
+    locator: { css: main table }
+  - do: click
+    target: Website relaunch
+    say: Click a project's name to open it.
+    cue: a project's name
+    expect: The Website relaunch project page with its tasks
+    expect_text: Write homepage copy
+    locator: { role: link, name: Website relaunch }
+  - do: check
+    target: Mark Write homepage copy done
+    say: When a task is done, tick its box. It's crossed off and saved right away.
+    cue: tick its box
+    expect: Write homepage copy is ticked and struck through
+    locator: { role: checkbox, name: Mark Write homepage copy done }
+  - say: You can also jump into a project from Recent projects on the Dashboard. Next, see how your team is doing.

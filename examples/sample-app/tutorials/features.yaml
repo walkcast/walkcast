@@ -1,0 +1,259 @@
+# Example output of /tutorials:discover for the sample app.
+app: Acme Projects
+generated_at: 2026-10-29
+areas:
+  - { id: projects, name: Projects }
+  - { id: reports, name: Reports }
+  - { id: team, name: Team }
+  - { id: billing, name: Billing }
+  - { id: account, name: Account }
+
+features:
+  - id: dashboard-overview
+    name: See your workspace at a glance
+    summary: The dashboard shows how many projects are open, tasks due this week, team size and recent projects.
+    area: projects
+    roles: [owner]
+    entry: ["Dashboard"]
+    routes: [/dashboard]
+    actions: [view]
+    importance: core
+    status: live
+    reach: link
+    labels: ["Dashboard", "Open projects", "Tasks due this week", "Team members", "Recent projects"]
+    evidence:
+      code: [server.mjs]
+      screens: [discovery/owner/screens/dashboard.jpg]
+    notes: The greeting always says "Good morning, Dana", and "Tasks due this week" is always 7.
+
+  - id: find-project
+    name: Find and open a project
+    summary: Browse every project with its owner and task count, and open one to see its tasks.
+    area: projects
+    roles: [owner]
+    entry: ["Projects", "Dashboard > Recent projects"]
+    routes: [/projects, /projects/:id]
+    actions: [view]
+    importance: core
+    status: live
+    reach: link
+    labels: ["Projects", "Recent projects", "Name", "Owner", "Tasks"]
+    evidence:
+      code: [server.mjs]
+      screens: [discovery/owner/screens/projects.jpg, discovery/owner/screens/projects-1.jpg]
+
+  - id: search-projects
+    name: Search projects by name
+    summary: A search box above the project list.
+    area: projects
+    roles: [owner]
+    entry: ["Projects > Search projects"]
+    routes: [/projects]
+    actions: [search]
+    importance: common
+    status: unfinished
+    reach: link
+    labels: ["Search projects", "Search by name"]
+    evidence:
+      code: [server.mjs]
+      screens: [discovery/owner/screens/projects.jpg]
+    notes: Typing or pressing Enter doesn't filter the list; the box isn't in a form and has no handler.
+
+  - id: create-project
+    name: Create a project
+    summary: Start a project with a name, description and owner.
+    area: projects
+    roles: [owner]
+    entry: ["Projects > New project", "Dashboard > New project"]
+    routes: [/projects/new]
+    actions: [create]
+    importance: core
+    status: live
+    reach: link
+    labels: ["New project", "Project name", "Description", "Owner", "Create project", "Cancel"]
+    evidence:
+      code: [server.mjs]
+      screens: [discovery/owner/screens/projects-new.jpg]
+    notes: >-
+      Create project opens the new project's page, showing its description and "No tasks
+      yet." Project name is required. Data lives in memory, so each run adds another
+      project until the server restarts.
+
+  - id: manage-tasks
+    name: Add and complete tasks
+    summary: Inside a project, add tasks and tick them off when they're done.
+    area: projects
+    roles: [owner]
+    entry: ["Projects > (a project)"]
+    routes: [/projects/:id]
+    actions: [create, complete]
+    importance: core
+    status: live
+    reach: link
+    labels: ["Tasks", "No tasks yet.", "New task", "What needs doing?", "Add task", "Mark Write homepage copy done"]
+    evidence:
+      code: [server.mjs]
+      screens: [discovery/owner/screens/projects-1.jpg]
+    notes: >-
+      Add task reloads the page with the new task at the bottom of the list. Ticking a task
+      strikes it through and saves in the background, without a reload.
+
+  - id: share-project
+    name: Share a project
+    summary: A Share button at the top of each project page.
+    area: projects
+    roles: [owner]
+    entry: ["Projects > (a project) > Share"]
+    routes: [/projects/:id]
+    actions: [share]
+    importance: common
+    status: unfinished
+    reach: interaction
+    labels: ["Share"]
+    evidence:
+      code: [server.mjs]
+      screens: [discovery/owner/screens/projects-1.jpg]
+    notes: Clicking Share does nothing; no dialog, no navigation.
+
+  - id: view-reports
+    name: Check team progress
+    summary: See how many tasks were completed and the average time to close them.
+    area: reports
+    roles: [owner]
+    entry: ["Reports"]
+    routes: [/reports]
+    actions: [view]
+    importance: common
+    status: live
+    reach: link
+    labels: ["Reports", "Tasks completed", "Average time to close"]
+    evidence:
+      code: [server.mjs]
+      screens: [discovery/owner/screens/reports.jpg]
+    notes: The figures are fixed at 23 tasks and 2.4 days.
+
+  - id: filter-reports-by-date
+    name: Change the report's date range
+    summary: Pick Last 7 days, Last 30 days or This quarter for the report.
+    area: reports
+    roles: [owner]
+    entry: ["Reports > Date range"]
+    routes: [/reports]
+    actions: [filter]
+    importance: common
+    status: unfinished
+    reach: link
+    labels: ["Date range", "Last 7 days", "Last 30 days", "This quarter"]
+    evidence:
+      code: [server.mjs]
+      screens: [discovery/owner/screens/reports.jpg]
+    notes: Choosing a range doesn't change the numbers.
+
+  - id: export-csv
+    name: Export a CSV of projects
+    summary: From Reports, download a CSV with each project's name and task count.
+    area: reports
+    roles: [owner]
+    entry: ["Reports > Export CSV"]
+    routes: [/reports/export.csv]
+    actions: [export]
+    importance: common
+    status: live
+    reach: link
+    labels: ["Export CSV"]
+    evidence:
+      code: [server.mjs]
+      screens: [discovery/owner/screens/reports.jpg]
+    notes: >-
+      Downloads export.csv. It holds project task counts, not the report's figures, and
+      ignores the date range. A recording only shows the click, not the file.
+
+  - id: view-members
+    name: See who's on the team
+    summary: List every member with their email address and role.
+    area: team
+    roles: [owner]
+    entry: ["Settings > Members"]
+    routes: [/settings, /settings/members]
+    actions: [view]
+    importance: admin
+    status: live
+    reach: link
+    labels: ["Settings", "Members", "Name", "Email", "Role", "Owner", "Admin", "Member"]
+    evidence:
+      code: [server.mjs]
+      screens: [discovery/owner/screens/settings.jpg, discovery/owner/screens/settings-members.jpg]
+    notes: Settings describes Members as "Invite people and change roles.", but there's no way to change a role.
+
+  - id: invite-teammate
+    name: Invite a teammate
+    summary: Invite someone by email as a Member or an Admin.
+    area: team
+    roles: [owner]
+    entry: ["Settings > Members > Invite a teammate"]
+    routes: [/settings/members]
+    actions: [invite]
+    importance: admin
+    status: live
+    reach: link
+    labels: ["Invite a teammate", "Email address", "Role", "Member", "Admin", "Send invite", "Invite sent to", "Invite pending"]
+    evidence:
+      code: [server.mjs]
+      screens: [discovery/owner/screens/settings-members.jpg]
+    notes: >-
+      Send invite shows "Invite sent to <email>." and adds an "Invite pending" row to the
+      members table. Inviting someone already there shows "<email> is already on the team
+      or invited." No email actually goes out, and Team members on the dashboard doesn't
+      count invites.
+
+  - id: billing
+    name: Check your plan and invoices
+    summary: See the current plan, seat count, renewal date and past invoice amounts.
+    area: billing
+    roles: [owner]
+    entry: ["Settings > Billing"]
+    routes: [/settings/billing]
+    actions: [view]
+    importance: admin
+    status: live
+    reach: link
+    labels: ["Billing", "Team plan", "Invoice", "Amount"]
+    evidence:
+      code: [server.mjs]
+      screens: [discovery/owner/screens/settings-billing.jpg]
+    notes: Invoices are table rows only; they can't be opened or downloaded.
+
+  - id: change-plan
+    name: Change your plan
+    summary: A Change plan button on the Billing page.
+    area: billing
+    roles: [owner]
+    entry: ["Settings > Billing > Change plan"]
+    routes: [/settings/billing]
+    actions: [edit]
+    importance: admin
+    status: unfinished
+    reach: interaction
+    labels: ["Change plan"]
+    evidence:
+      code: [server.mjs]
+      screens: [discovery/owner/screens/settings-billing.jpg]
+    notes: Clicking Change plan does nothing.
+
+  - id: sign-in-and-out
+    name: Sign in and log out
+    summary: Sign in with an email and password, and log out from the sidebar.
+    area: account
+    roles: [owner]
+    entry: ["Sign in to Acme", "Log out"]
+    routes: [/login, /logout]
+    actions: [sign-in, sign-out]
+    importance: common
+    status: live
+    reach: link
+    labels: ["Sign in to Acme", "Email", "Password", "Sign in", "Log out"]
+    evidence:
+      code: [server.mjs]
+    notes: >-
+      A wrong password shows "That email and password don’t match." Tours start already
+      signed in, so this rarely needs its own video.

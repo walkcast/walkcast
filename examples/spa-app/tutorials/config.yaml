@@ -1,0 +1,21 @@
+# Test config for the single-page sample app. It has no login, so there are no roles.
+app:
+  name: Helpdesk
+  url: http://localhost:4400
+  start: npm run dev
+  cwd: .
+  ready_timeout: 20
+  reset: curl -fsS -X POST http://localhost:4400/__reset   # puts the demo tickets back before each tour
+  display_url: https://help.example.com                    # what the videos' address bar shows
+
+crawl:
+  start: [/]
+  max_pages: 20
+  per_pattern: 2
+  exclude: ["^/api/"]
+  viewport: { width: 1440, height: 900 }
+
+audience: Support agents new to Helpdesk
+
+voice:
+  engine: kokoro   # keeps the tests covering Kokoro; the sample app uses Ming's narrator

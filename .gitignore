@@ -1,0 +1,6 @@
+node_modules/
+.DS_Store
+
+# Output the plugin writes into an app's tutorials/ folder
+**/tutorials/.auth/
+**/tutorials/discovery/

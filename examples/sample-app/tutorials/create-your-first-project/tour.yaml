@@ -1,0 +1,52 @@
+id: create-your-first-project
+title: Create your first project
+role: owner
+start: /dashboard
+approved_at: 2026-10-29
+approved_hash: 9499204942a0a37d
+steps:
+  - say: Everything in Acme lives in a project. Let's create your first one and give it a task.
+  - do: show
+    target: Open projects
+    say: You start on the Dashboard, which sums up your open projects and tasks.
+    locator: { css: main .grid }
+  - do: click
+    target: New project
+    say: Click New project.
+    expect: A form titled New project
+    expect_text: Project name
+    locator: { role: link, name: New project }
+  - do: type
+    target: Project name
+    text: Office move
+    say: Give it a name your team will recognize.
+    cue: a name
+    locator: { role: textbox, name: Project name }
+  - do: type
+    target: Description
+    text: Everything we need for the move to the new office.
+    say: Add a short description, so everyone knows what it covers.
+    locator: { role: textbox, name: Description }
+  - do: select
+    target: Owner
+    option: Sam Lee
+    say: Choose an owner. Their name appears next to the project in every list.
+    locator: { role: combobox, name: Owner }
+  - do: click
+    target: Create project
+    say: Click Create project, and your new project opens.
+    expect: The Office move project page, showing its description and No tasks yet.
+    expect_text: [ Office move, No tasks yet. ]
+    locator: { role: button, name: Create project }
+  - do: type
+    target: New task
+    text: Book the movers
+    say: It has no tasks yet. Type your first one under New task.
+    locator: { role: textbox, name: New task }
+  - do: click
+    target: Add task
+    say: Click Add task, and it's on the list.
+    expect: Book the movers in the Tasks list
+    expect_text: Book the movers
+    locator: { role: button, name: Add task }
+  - say: That's your first project, with its first task. Next, find a project and tick off tasks.
